@@ -161,7 +161,8 @@ def run_hp_search_optuna(trainer, n_trials: int, direction: str, **kwargs) -> Be
     import optuna
 
     def _objective(trial, checkpoint_dir=None):
-        if trainer.args.parallel_mode == ParallelMode.DISTRIBUTED and trainer.args.world_size > 1:
+        if trainer.args.parallel_mode == ParallelMode.DISTRIBUTED and\
+                trainer.args.world_size > 1:
             trial = optuna.integration.TorchDistributedTrial(trial)
 
         checkpoint = None
