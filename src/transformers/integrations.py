@@ -187,7 +187,7 @@ def run_hp_search_optuna(trainer, n_trials: int, direction: str, **kwargs) -> Be
         return BestRun(str(best_trial.number), best_trial.value, best_trial.params)
     else:
         for _ in range(n_jobs):
-            _objective(None)
+            _objective(n_trials)
         return None
 
 
