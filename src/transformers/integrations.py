@@ -129,9 +129,9 @@ def is_codecarbon_available():
 
 def hp_params(trial):
     if is_optuna_available():
-        import optuna
+        from optuna.trial import BaseTrial
 
-        if isinstance(trial, optuna.Trial):
+        if isinstance(trial, BaseTrial):
             return trial.params
     if is_ray_tune_available():
         if isinstance(trial, dict):
