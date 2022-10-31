@@ -179,10 +179,14 @@ def run_hp_search_optuna(trainer, n_trials: int, direction: str, **kwargs) -> Be
 
     timeout = kwargs.pop("timeout", None)
     n_jobs = kwargs.pop("n_jobs", 1)
-    study = optuna.create_study(direction=direction, **kwargs)
-    study.optimize(_objective, n_trials=n_trials, timeout=timeout, n_jobs=n_jobs)
-    best_trial = study.best_trial
-    return BestRun(str(best_trial.number), best_trial.value, best_trial.params)
+    if trainer.args.process_index == 0:
+        study = optuna.create_study(direction=direction, **kwargs)
+        study.optimize(_objective, n_trials=n_trials, timeout=timeout, n_jobs=n_jobs)
+        best_trial = study.best_trial
+        return BestRun(str(best_trial.number), best_trial.value, best_trial.params)
+    else:
+        _objective(None)
+        return None
 
 
 def run_hp_search_ray(trainer, n_trials: int, direction: str, **kwargs) -> BestRun:
