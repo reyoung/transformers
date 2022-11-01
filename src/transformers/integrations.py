@@ -32,7 +32,6 @@ import numpy as np
 from . import __version__ as version
 from .utils import flatten_dict, is_datasets_available, is_torch_available, logging
 
-
 logger = logging.get_logger(__name__)
 
 if is_torch_available():
@@ -161,7 +160,7 @@ def run_hp_search_optuna(trainer, n_trials: int, direction: str, **kwargs) -> Be
     import optuna
 
     def _objective(trial, checkpoint_dir=None):
-        if trainer.args.parallel_mode == ParallelMode.DISTRIBUTED and\
+        if trainer.args.parallel_mode == ParallelMode.DISTRIBUTED and \
                 trainer.args.world_size > 1:
             trial = optuna.integration.TorchDistributedTrial(trial)
 
@@ -187,7 +186,10 @@ def run_hp_search_optuna(trainer, n_trials: int, direction: str, **kwargs) -> Be
         return BestRun(str(best_trial.number), best_trial.value, best_trial.params)
     else:
         for _ in range(n_trials):
-            _objective(None)
+            try:
+                _objective(None)
+            except optuna.TrialPruned:
+                pass
         return None
 
 
@@ -277,7 +279,7 @@ def run_hp_search_ray(trainer, n_trials: int, direction: str, **kwargs) -> BestR
 
         # Check for `do_eval` and `eval_during_training` for schedulers that require intermediate reporting.
         if isinstance(
-            kwargs["scheduler"], (ASHAScheduler, MedianStoppingRule, HyperBandForBOHB, PopulationBasedTraining)
+                kwargs["scheduler"], (ASHAScheduler, MedianStoppingRule, HyperBandForBOHB, PopulationBasedTraining)
         ) and (not trainer.args.do_eval or trainer.args.evaluation_strategy == IntervalStrategy.NO):
             raise RuntimeError(
                 "You are using {cls} as a scheduler but you haven't enabled evaluation during training. "
@@ -928,7 +930,7 @@ class MLflowCallback(TrainerCallback):
             # MLflow cannot log more than 100 values in one go, so we have to split it
             combined_dict_items = list(combined_dict.items())
             for i in range(0, len(combined_dict_items), self._MAX_PARAMS_TAGS_PER_BATCH):
-                self._ml_flow.log_params(dict(combined_dict_items[i : i + self._MAX_PARAMS_TAGS_PER_BATCH]))
+                self._ml_flow.log_params(dict(combined_dict_items[i: i + self._MAX_PARAMS_TAGS_PER_BATCH]))
             mlflow_tags = os.getenv("MLFLOW_TAGS", None)
             if mlflow_tags:
                 mlflow_tags = json.loads(mlflow_tags)
@@ -974,9 +976,9 @@ class MLflowCallback(TrainerCallback):
         # if the previous run is not terminated correctly, the fluent API will
         # not let you start a new run before the previous one is killed
         if (
-            self._auto_end_run
-            and callable(getattr(self._ml_flow, "active_run", None))
-            and self._ml_flow.active_run() is not None
+                self._auto_end_run
+                and callable(getattr(self._ml_flow, "active_run", None))
+                and self._ml_flow.active_run() is not None
         ):
             self._ml_flow.end_run()
 
@@ -1030,16 +1032,16 @@ class NeptuneCallback(TrainerCallback):
     flat_metrics = {"train/epoch"}
 
     def __init__(
-        self,
-        *,
-        api_token: Optional[str] = None,
-        project: Optional[str] = None,
-        name: Optional[str] = None,
-        base_namespace: str = "finetuning",
-        run: Optional["Run"] = None,
-        log_parameters: bool = True,
-        log_checkpoints: Optional[str] = None,
-        **neptune_run_kwargs
+            self,
+            *,
+            api_token: Optional[str] = None,
+            project: Optional[str] = None,
+            name: Optional[str] = None,
+            base_namespace: str = "finetuning",
+            run: Optional["Run"] = None,
+            log_parameters: bool = True,
+            log_checkpoints: Optional[str] = None,
+            **neptune_run_kwargs
     ):
         if not is_neptune_available():
             raise ValueError(
