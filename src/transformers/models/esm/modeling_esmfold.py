@@ -52,6 +52,9 @@ from .openfold_utils import (
 
 
 logger = logging.get_logger(__name__)
+_CHECKPOINT_FOR_DOC = "Rocketknight1/esmfold_v1"
+_CONFIG_FOR_DOC = "EsmConfig"
+_TOKENIZER_FOR_DOC = "EsmTokenizer"
 
 
 @dataclass
@@ -2092,7 +2095,16 @@ class EsmForProteinFolding(EsmPreTrainedModel):
 
         Example:
 
-        TODO Matt
+        ```python
+        >>> from transformers import AutoTokenizer, EsmForProteinFolding
+
+        >>> model = EsmForProteinFolding.from_pretrained("facebook/esmfold_v1")
+        >>> tokenizer = AutoTokenizer.from_pretrained("facebook/esmfold_v1")
+        >>> inputs = tokenizer(["MLKNVQVQLV"], return_tensors="pt", add_special_tokens=False)  # A tiny random peptide
+        >>> outputs = model(**inputs)
+        >>> folded_positions = outputs.positions
+        ```
+
         """
         cfg = self.config.esmfold_config
 
@@ -2236,8 +2248,7 @@ class EsmForProteinFolding(EsmPreTrainedModel):
     def infer(
         self,
         seqs: Union[str, List[str]],
-        residx=None,
-        with_mask: Optional[torch.Tensor] = None,
+        position_ids=None,
     ):
         if type(seqs) is str:
             lst = [seqs]
@@ -2260,17 +2271,17 @@ class EsmForProteinFolding(EsmPreTrainedModel):
             ]
         )  # B=1 x L
         mask = collate_dense_tensors([aatype.new_ones(len(seq)) for seq in lst])
-        residx = (
-            torch.arange(aatype.shape[1], device=device).expand(len(lst), -1) if residx is None else residx.to(device)
+        position_ids = (
+            torch.arange(aatype.shape[1], device=device).expand(len(lst), -1)
+            if position_ids is None
+            else position_ids.to(device)
         )
-        if residx.ndim == 1:
-            residx = residx.unsqueeze(0)
+        if position_ids.ndim == 1:
+            position_ids = position_ids.unsqueeze(0)
         return self.forward(
             aatype,
             mask,
-            mask_aa=with_mask is not None,
-            masking_pattern=with_mask,
-            residx=residx,
+            position_ids=position_ids,
         )
 
     @staticmethod
