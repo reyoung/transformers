@@ -17,6 +17,7 @@ Torch utilities for the Trainer class.
 """
 
 import datetime
+import gc
 import json
 import math
 import os
@@ -112,7 +113,16 @@ def nested_concat(tensors, new_tensors, padding_index=-100):
     if isinstance(tensors, (list, tuple)):
         return type(tensors)(nested_concat(t, n, padding_index=padding_index) for t, n in zip(tensors, new_tensors))
     elif isinstance(tensors, torch.Tensor):
-        return torch_pad_and_concatenate(tensors, new_tensors, padding_index=padding_index)
+        try:
+            return torch_pad_and_concatenate(tensors, new_tensors, padding_index=padding_index)
+        except Exception:  # empty cache and try again
+            gc.collect()
+            device = tensors.device
+            if device.type == 'cuda':
+                torch.cuda.current_stream(device).synchronize()  # synchronize computation to free more cache
+                torch.cuda.empty_cache()
+            return torch_pad_and_concatenate(tensors, new_tensors, padding_index=padding_index)
+
     elif isinstance(tensors, Mapping):
         return type(tensors)(
             {k: nested_concat(t, new_tensors[k], padding_index=padding_index) for k, t in tensors.items()}
