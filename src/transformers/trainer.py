@@ -53,8 +53,14 @@ from .integrations import (  # isort: split
 
 import numpy as np
 import torch
+
+
 import torch.distributed as dist
 from packaging import version
+
+if version.parse(version.parse(torch.__version__).base_version) > version.parse("1.13.0"):
+    import torch._dynamo as torchdynamo
+
 from torch import nn
 from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -639,8 +645,8 @@ class Trainer:
         if args.torchdynamo:
             if not is_torchdynamo_available():
                 raise RuntimeError("Torchdynamo is not installed.")
-            import torchdynamo
-            from torchdynamo.optimizations import backends
+
+            backends = torchdynamo.optimizations.backends
 
             def get_ctx():
                 # Normal
