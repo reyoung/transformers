@@ -639,23 +639,23 @@ class Trainer:
         if args.torchdynamo:
             if not is_torchdynamo_available():
                 raise RuntimeError("Torchdynamo is not installed.")
-            import torch._dynamo
-            from torch._dynamo.optimizations import backends
+            import torchdynamo
+            from torchdynamo.optimizations import backends
 
             def get_ctx():
                 # Normal
                 if args.torchdynamo == "eager":
-                    return torch._dynamo.optimize("eager")
+                    return torchdynamo.optimize("eager")
                 elif args.torchdynamo == "nvfuser":
-                    return torch._dynamo.optimize("aot_nvfuser")
+                    return torchdynamo.optimize("aot_nvfuser")
                 # TensorRT
                 if args.torchdynamo in ["fx2trt-fp16", "fx2trt"]:
                     if not is_torch_tensorrt_fx_available():
                         raise RuntimeError("Torch-TensorRT FX path is not installed.")
                     if args.torchdynamo == "fx2trt-fp16":
-                        return torch._dynamo.optimize(backends.fx2trt_compiler_fp16)
+                        return torchdynamo.optimize(backends.fx2trt_compiler_fp16)
                     elif args.torchdynamo == "fx2trt":
-                        return torch._dynamo.optimize(backends.fx2trt_compiler)
+                        return torchdynamo.optimize(backends.fx2trt_compiler)
                 else:
                     raise RuntimeError(f"Torchdynamo backend {args.torchdynamo} is not supported.")
 
