@@ -2521,7 +2521,7 @@ class Trainer:
             loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
             return loss_mb.reduce_mean().detach().to(self.args.device)
 
-        with self.ctx_manager_torchdynamo:
+        with self.compute_loss_context_manager():
             loss = self.compute_loss(model, inputs)
 
         if self.args.n_gpu > 1:
@@ -3238,8 +3238,7 @@ class Trainer:
                     logits = smp_nested_concat(logits_mb)
             else:
                 if has_labels or loss_without_labels:
-                    with self.torchdynamo_smart_context_manager():
-                    # with self.compute_loss_context_manager():
+                    with self.compute_loss_context_manager():
                         loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
                     loss = loss.mean().detach()
 
@@ -3249,7 +3248,7 @@ class Trainer:
                         logits = outputs[1:]
                 else:
                     loss = None
-                    with self.ctx_manager_torchdynamo:
+                    with self.compute_loss_context_manager():
                         outputs = model(**inputs)
                     if isinstance(outputs, dict):
                         logits = tuple(v for k, v in outputs.items() if k not in ignore_keys)
