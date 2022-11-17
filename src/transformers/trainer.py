@@ -644,20 +644,7 @@ class Trainer:
 
             def get_wrapper():
                 # Normal
-                if args.torchdynamo == "eager":
-                    return torchdynamo.optimize("eager")
-                elif args.torchdynamo == "nvfuser":
-                    return torchdynamo.optimize("aot_ts_nvfuser")
-                # TensorRT
-                if args.torchdynamo in ["fx2trt-fp16", "fx2trt"]:
-                    if not is_torch_tensorrt_fx_available():
-                        raise RuntimeError("Torch-TensorRT FX path is not installed.")
-                    if args.torchdynamo == "fx2trt-fp16":
-                        return torchdynamo.optimize(backends.fx2trt_compiler_fp16)
-                    elif args.torchdynamo == "fx2trt":
-                        return torchdynamo.optimize(backends.fx2trt_compiler)
-                else:
-                    raise RuntimeError(f"Torchdynamo backend {args.torchdynamo} is not supported.")
+                return torchdynamo.optimize(args.torchdynamo)
 
             self.torchdynamo_wrapped_compute_loss = get_wrapper()(self.__compute_loss)
         else:
