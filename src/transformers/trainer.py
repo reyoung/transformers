@@ -2469,12 +2469,7 @@ class Trainer:
         """
         A helper wrapper to group together context managers.
         """
-        return ContextManagers(
-            [
-                self.torchdynamo_smart_context_manager(),
-                self.autocast_smart_context_manager(),
-            ]
-        )
+        return self.torchdynamo_smart_context_manager()
 
     def torchdynamo_smart_context_manager(self):
         """
