@@ -640,7 +640,8 @@ class Trainer:
             if not is_torchdynamo_available():
                 raise RuntimeError("Torchdynamo is not installed.")
 
-            backends = torchdynamo.optimizations.backends
+            torch._dynamo.config.verbose = True
+            torch._dynamo.config.log_level = logging.DEBUG
 
             def get_wrapper():
                 # Normal
